@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NBA Career Roulette</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="./styles/app.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="v50-header">
+      <h1>NBA Career Roulette</h1>
+      <div class="v50-admin-actions">
+        <button id="skipEndButton" class="outline-button">Skip To End</button>
+        <button id="copyButton" class="outline-button">Copy Summary Text</button>
+        <button id="resetButton" class="danger-button">Reset</button>
+      </div>
+    </header>
+
+    <section class="v50-game-grid">
+      <aside class="v50-panel v50-player-card">
+        <p class="v50-label">Player File</p>
+        <label class="sr-only" for="playerNameInput">Player name</label>
+        <input id="playerNameInput" class="player-name" value="" placeholder="Enter player name" maxlength="32" />
+        <div id="summaryList" class="summary-list"></div>
+      </aside>
+
+      <section class="v50-centre">
+        <div id="progressSteps" class="progress-steps"></div>
+        <div id="stageContent"></div>
+      </section>
+
+      <aside class="v50-panel v50-tracker-card">
+        <p class="v50-label">Career Tracker</p>
+        <div id="journeyLog" class="journey-log"></div>
+      </aside>
+    </section>
+  </main>
+
+  <div id="resultModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <button id="closeModalButton" class="modal-close" aria-label="Close result">×</button>
+      <p id="modalKicker" class="eyebrow">Result</p>
+      <h2 id="modalTitle">Result</h2>
+      <p id="modalCopy"></p>
+      <div id="modalPills" class="modal-pills"></div>
+      <div class="result-actions">
+        <button id="bonusReSpinButton" class="outline-button hidden">Use Spin Boost Re-Spin</button>
+        <button id="continueButton" class="primary-button">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="injuryModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="injuryModalTitle">
+    <div class="modal-card injury-reveal-card">
+      <p class="eyebrow">Career Ending Injury</p>
+      <h2 id="injuryModalTitle">Career Ending Injury</h2>
+      <p id="injuryModalCopy" class="injury-reveal-name"></p>
+      <button id="injuryContinueButton" class="primary-button">Continue</button>
+    </div>
+  </div>
+
+  <div id="finalModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="finalModalTitle">
+    <div class="modal-card final-modal-card">
+      <button id="closeFinalModalButton" class="modal-close" aria-label="Close career résumé">×</button>
+      <p id="finalModalKicker" class="eyebrow">Career Résumé</p>
+      <h2 id="finalModalTitle">Career Complete</h2>
+
+      <div id="finalProspectCard" class="prospect-card-modal"></div>
+
+      <div class="final-actions">
+        <button id="downloadImageButton" class="outline-button">Download Image</button>
+        <button id="shareImageButton" class="outline-button">Share Image</button>
+        <button id="copyFinalButton" class="outline-button">Copy Summary Text</button>
+        <button id="restartFinalButton" class="spin-button">Restart Career</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="boostInfoModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="boostInfoTitle">
+    <div class="modal-card boost-info-card">
+      <p class="eyebrow">Spin Boosts Unlocked</p>
+      <h2 id="boostInfoTitle">Spin Boosts</h2>
+      <p class="boost-info-intro">Spin Boosts are now available for the rest of your career.</p>
+      <div class="boost-info-grid">
+        <div class="boost-info-item">
+          <strong>Before a spin</strong>
+          <span>Use one Spin Boost to improve the positive sections on the wheel for that spin only.</span>
+        </div>
+        <div class="boost-info-item">
+          <strong>After a result</strong>
+          <span>Use one Spin Boost to re-spin the same wheel with the normal board.</span>
+        </div>
+        <div class="boost-info-item">
+          <strong>Earn more</strong>
+          <span>Championship +3, MVP +2, Scoring Title +1 and DPOY +1.</span>
+        </div>
+      </div>
+      <div class="result-actions">
+        <button id="boostInfoOkButton" class="primary-button">Got It</button>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/spin-wheel@5.0.2/dist/spin-wheel-iife.js"></script>
+  <script src="./src/app.js" defer></script>
+
+  
+
+</body>
+</html>
