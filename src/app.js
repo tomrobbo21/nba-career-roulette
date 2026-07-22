@@ -1340,12 +1340,13 @@ function renderSummary() {
     { icon: "🔥", value: awards.scoringTitle || 0, label: "Scoring Titles" },
   ];
 
-  const bars = [
-    ["Stats", rating.statsScore || 0, 30],
-    ["Awards", rating.awardsScore || 0, 25],
-    ["Winning", rating.teamScore || 0, 25],
-    ["Longevity", rating.longevityScore || 0, 10],
-  ];
+const bars = [
+  ["Stats", Number(rating.statsScore || 0), 30],
+  ["Awards", Number(rating.awardsScore || 0), 25],
+  ["Winning", Number(rating.teamScore || 0), 25],
+  ["Longevity", Number(rating.longevityScore || 0), 10],
+  ["Legacy", Number(rating.legacyScore || 0), 10],
+];
 
   const recentSpins = state.log.slice(0, 5);
 
