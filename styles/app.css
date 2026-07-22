@@ -3053,3 +3053,13 @@ body {
 .v50-best-season {
   color: var(--final-neutral-strong) !important;
 }
+
+
+/* V3 visible 100 rating breakdown */
+.rating-breakdown--visible-100 .rating-breakdown-row {
+  grid-template-columns: 84px 1fr 44px;
+}
+
+.rating-breakdown--visible-100 .rating-breakdown-row > span:last-child {
+  white-space: nowrap;
+}

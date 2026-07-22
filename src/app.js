@@ -12,7 +12,7 @@ window.addEventListener("error", (event) => {
   `;
 });
 
-const STORAGE_KEY = "nba-career-roulette-webapp-v2-rating-update-save";
+const STORAGE_KEY = "nba-career-roulette-webapp-v3-visible-100-rating-save";
 
 const wheelColors = [
   "#f45a1e",
@@ -4676,32 +4676,40 @@ function getCareerRatingBreakdown() {
 
 
 function getCareerRatingBreakdownForDisplay() {
-  return state.career.rating || getCareerRatingBreakdown();
+  const breakdown = state.career.rating || getCareerRatingBreakdown();
+  return {
+    ...breakdown,
+    legacyScore: typeof breakdown.legacyScore === "number" ? breakdown.legacyScore : 0,
+  };
 }
+
+
 
 function renderRatingBreakdown(breakdown) {
   const rows = [
-    ["Stats", breakdown.statsScore, 30],
-    ["Awards", breakdown.awardsScore, 25],
-    ["Winning", breakdown.teamScore, 25],
-    ["Longevity", breakdown.longevityScore, 10],
-    ["Legacy", breakdown.legacyScore || 0, 10],
+    ["Stats", Number(breakdown.statsScore || 0), 30],
+    ["Awards", Number(breakdown.awardsScore || 0), 25],
+    ["Winning", Number(breakdown.teamScore || 0), 25],
+    ["Longevity", Number(breakdown.longevityScore || 0), 10],
+    ["Legacy", Number(breakdown.legacyScore || 0), 10],
   ];
 
   return `
-    <div class="rating-breakdown">
+    <div class="rating-breakdown rating-breakdown--visible-100">
       ${rows.map(([label, value, max]) => `
         <div class="rating-breakdown-row">
           <span>${escapeHtml(label)}</span>
           <div class="rating-breakdown-track">
             <div class="rating-breakdown-fill" style="width:${escapeHtml(String(clamp((Math.max(0, Number(value)) / max) * 100, 0, 100)))}%"></div>
           </div>
-          <span>${escapeHtml(Number(value).toFixed(1))}</span>
+          <span>${escapeHtml(`${Number(value || 0).toFixed(0)}/${max}`)}</span>
         </div>
       `).join("")}
     </div>
   `;
 }
+
+
 
 
 
