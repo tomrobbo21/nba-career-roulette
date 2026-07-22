@@ -3003,3 +3003,53 @@ body {
   --team-secondary: #FFFFFF;
   border-color: color-mix(in srgb, #FFFFFF 55%, #ffffff 20%) !important;
 }
+
+
+/* V2 rating update - neutral final sharing card */
+.v50-final-card {
+  --final-neutral-strong: #ffffff;
+  --final-neutral-muted: rgba(255,255,255,.72);
+  --final-neutral-panel: rgba(255,255,255,.065);
+  --final-neutral-panel-2: rgba(255,255,255,.085);
+  --final-neutral-line: rgba(255,255,255,.12);
+}
+
+.v50-final-card .v50-kicker {
+  color: rgba(255,255,255,.62) !important;
+}
+
+.v50-final-hero,
+.v50-final-section {
+  background: var(--final-neutral-panel) !important;
+  border-color: var(--final-neutral-line) !important;
+}
+
+.v50-final-hero span,
+.v50-final-hero small,
+.v50-final-bar,
+.v50-final-stats span {
+  color: var(--final-neutral-muted) !important;
+}
+
+.v50-final-rating {
+  background: linear-gradient(180deg, #343434, #1f1f1f) !important;
+  border: 1px solid rgba(255,255,255,.16) !important;
+  box-shadow: 0 18px 44px rgba(255,255,255,.08) !important;
+}
+
+.v50-final-bar b {
+  background: linear-gradient(90deg, #6b7280, #e5e7eb) !important;
+}
+
+.v50-final-achievements div,
+.v50-final-stats div div {
+  background: var(--final-neutral-panel-2) !important;
+  border-color: var(--final-neutral-line) !important;
+}
+
+.v50-final-achievements span,
+.v50-final-stats strong,
+.v50-final-bar strong,
+.v50-best-season {
+  color: var(--final-neutral-strong) !important;
+}

@@ -12,7 +12,7 @@ window.addEventListener("error", (event) => {
   `;
 });
 
-const STORAGE_KEY = "nba-career-roulette-webapp-v1-save";
+const STORAGE_KEY = "nba-career-roulette-webapp-v2-rating-update-save";
 
 const wheelColors = [
   "#f45a1e",
@@ -2762,7 +2762,15 @@ function applyTrainingFocus(option) {
     target: option.target,
     negativeAll: Boolean(option.negativeAll),
   };
+
+  if (option.negativeAll) {
+    state.career.legacyBoost += -1;
+  } else {
+    state.career.legacyBoost += 0.5;
+  }
 }
+
+
 
 function getTrainingFocusSummary(focus) {
   if (!focus) return "";
@@ -4578,6 +4586,9 @@ function getCareerRatingBreakdown() {
   const awards = state.career.awards || {};
   const playoff = state.career.playoffStats || {};
   const championships = Number(playoff.championships || 0);
+  const finalsAppearances = Number(playoff.finalsAppearances || 0);
+  const conferenceFinals = Number(playoff.conferenceFinals || 0);
+  const playoffAppearances = Number(playoff.playoffAppearances || 0);
   const mvps = Number(awards.mvp || 0);
   const allStars = Number(awards.allStar || 0);
   const allNbaFirst = Number(awards.allNbaFirst || 0);
@@ -4597,44 +4608,51 @@ function getCareerRatingBreakdown() {
   );
 
   const awardsScore = clamp(
-    mvps * 2.8 +
-    allNbaFirst * 1.2 +
-    allNba * 0.8 +
-    allStars * 0.45 +
-    scoringTitles * 1.1 +
-    dpoys * 1.1 +
+    mvps * 4.0 +
+    allNbaFirst * 1.5 +
+    allNba * 0.9 +
+    allStars * 0.55 +
+    scoringTitles * 1.3 +
+    dpoys * 1.5 +
     roy * 0.8,
     0,
     25
   );
 
+  const finalsLosses = Math.max(0, finalsAppearances - championships);
+  const conferenceFinalsOnly = Math.max(0, conferenceFinals - finalsAppearances);
+  const playoffRunsOnly = Math.max(0, playoffAppearances - conferenceFinals);
+
   const teamScore = clamp(
-    championships * 2.35 +
-    Math.max(0, (playoff.finalsAppearances || 0) - championships) * 0.9 +
-    (playoff.conferenceFinals || 0) * 0.35 +
-    (playoff.playoffAppearances || 0) * 0.22,
+    championships * 5.25 +
+    finalsLosses * 1.6 +
+    conferenceFinalsOnly * 0.85 +
+    playoffRunsOnly * 0.35,
     0,
     25
   );
 
   const longevityScore = clamp(nbaSeasons * 0.5, 0, 10);
 
-  let offseasonScore = clamp(Number(state.career.legacyBoost || 0) / 4, -5, 5);
-  if (state.endingType === "betting_scandal") offseasonScore -= 8;
-  if (state.endingType === "nba_injury" && nbaSeasons <= 3) offseasonScore -= 2;
-  offseasonScore = clamp(offseasonScore, -10, 5);
+  // Legacy is now visible. Offseason life events feed state.career.legacyBoost.
+  // Training focus also nudges legacy through applyTrainingFocus.
+  const resumeLegacyBonus =
+    Math.max(0, championships - 1) * 0.6 +
+    mvps * 0.7 +
+    allNbaFirst * 0.25 +
+    allNba * 0.12 +
+    Math.max(0, allStars - 5) * 0.12 +
+    scoringTitles * 0.25 +
+    dpoys * 0.4 +
+    roy * 0.2;
 
-  const goatBonus = clamp(
-    Math.max(0, championships - 3) * 0.75 +
-    Math.max(0, mvps - 2) * 0.8 +
-    Math.max(0, allStars - 8) * 0.18 +
-    Math.max(0, scoringTitles - 2) * 0.22 +
-    Math.max(0, dpoys - 1) * 0.22,
-    0,
-    12
-  );
+  const offseasonLegacy = Number(state.career.legacyBoost || 0) / 8;
 
-  let total = statsScore + awardsScore + teamScore + longevityScore + offseasonScore + goatBonus;
+  let legacyScore = clamp(5 + offseasonLegacy + resumeLegacyBonus, 0, 10);
+  if (state.endingType === "betting_scandal") legacyScore = clamp(legacyScore - 4, 0, 10);
+  if (state.endingType === "nba_injury" && nbaSeasons <= 3) legacyScore = clamp(legacyScore - 1.5, 0, 10);
+
+  let total = statsScore + awardsScore + teamScore + longevityScore + legacyScore;
 
   if (nbaSeasons < 3 && !mvps && !championships) total = Math.min(total, 28);
   if (nbaSeasons < 5 && mvps < 1 && championships < 1) total = Math.min(total, 45);
@@ -4647,11 +4665,13 @@ function getCareerRatingBreakdown() {
     awardsScore: Number(awardsScore.toFixed(1)),
     teamScore: Number(teamScore.toFixed(1)),
     longevityScore: Number(longevityScore.toFixed(1)),
-    offseasonScore: Number(offseasonScore.toFixed(1)),
-    goatBonus: Number(goatBonus.toFixed(1)),
+    legacyScore: Number(legacyScore.toFixed(1)),
+    offseasonLegacy: Number(offseasonLegacy.toFixed(1)),
     avgDefense: Number(avgDef.toFixed(1)),
   };
 }
+
+
 
 
 
@@ -4665,6 +4685,7 @@ function renderRatingBreakdown(breakdown) {
     ["Awards", breakdown.awardsScore, 25],
     ["Winning", breakdown.teamScore, 25],
     ["Longevity", breakdown.longevityScore, 10],
+    ["Legacy", breakdown.legacyScore || 0, 10],
   ];
 
   return `
@@ -4681,6 +4702,8 @@ function renderRatingBreakdown(breakdown) {
     </div>
   `;
 }
+
+
 
 
 
@@ -4774,13 +4797,14 @@ function showFinalProspectModal() {
     ["Awards", ratingBreakdown.awardsScore || 0, 25],
     ["Winning", ratingBreakdown.teamScore || 0, 25],
     ["Longevity", ratingBreakdown.longevityScore || 0, 10],
+    ["Legacy", ratingBreakdown.legacyScore || 0, 10],
   ];
 
   const averageItems = [
     ["PPG", Number(totals.ppg || 0).toFixed(1)],
     ["RPG", Number(totals.rpg || 0).toFixed(1)],
     ["APG", Number(totals.apg || 0).toFixed(1)],
-    ["DEF", `+${Math.round(Number(ratingBreakdown.avgDefense || 0))}`],
+    ["DEF", getDefenseDisplayLabelFromImpact(ratingBreakdown.avgDefense || totals.defense || 0)],
   ];
 
   elements.finalProspectCard.innerHTML = `
@@ -4837,6 +4861,8 @@ function showFinalProspectModal() {
   closeModal(true);
   elements.finalModal.classList.remove("hidden");
 }
+
+
 
 
 
@@ -5110,27 +5136,27 @@ function createCareerShareCanvas() {
   canvas.height = height;
 
   const ctx = canvas.getContext("2d");
-  const primary = getComputedStyle(document.body).getPropertyValue("--team-primary").trim() || "#009844";
-  const secondary = getComputedStyle(document.body).getPropertyValue("--team-secondary").trim() || "#151313";
+  const primary = "#e5e7eb";
+  const secondary = "#9ca3af";
   const bg = "#050505";
-  const panel = "#151313";
-  const panel2 = "#242220";
-  const line = "rgba(255,255,255,.14)";
+  const panel = "#151515";
+  const panel2 = "#2b2b2b";
+  const line = "rgba(255,255,255,.16)";
   const text = "#ffffff";
-  const muted = "rgba(255,255,255,.68)";
+  const muted = "rgba(255,255,255,.70)";
 
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, width, height);
 
   const grd = ctx.createRadialGradient(540, 100, 40, 540, 120, 770);
-  grd.addColorStop(0, hexToRgba(primary, .34));
+  grd.addColorStop(0, "rgba(255,255,255,.16)");
   grd.addColorStop(.46, "rgba(255,255,255,.035)");
   grd.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = grd;
   ctx.fillRect(0, 0, width, height);
 
   roundRect(ctx, 70, 70, 940, 220, 28, panel, line, 2);
-  drawText(ctx, "CAREER RÉSUMÉ", 105, 122, { size: 28, weight: "900", colour: primary, letterSpacing: 3 });
+  drawText(ctx, "CAREER RÉSUMÉ", 105, 122, { size: 28, weight: "900", colour: muted, letterSpacing: 3 });
   const upperName = data.playerName.toUpperCase();
   drawText(ctx, upperName, 105, 198, {
     size: fitTextSize(ctx, upperName, 660, 74, "900"),
@@ -5138,8 +5164,8 @@ function createCareerShareCanvas() {
     colour: text,
     maxWidth: 660,
   });
-  roundRect(ctx, 770, 112, 185, 122, 60, primary, primary, 0);
-  drawText(ctx, "RATING", 862, 150, { size: 22, weight: "900", colour: text, align: "center" });
+  roundRect(ctx, 770, 112, 185, 122, 60, "#2f2f2f", "rgba(255,255,255,.16)", 1);
+  drawText(ctx, "RATING", 862, 150, { size: 22, weight: "900", colour: muted, align: "center" });
   drawText(ctx, `${data.rating}`, 848, 209, { size: 66, weight: "900", colour: text, align: "center" });
   drawText(ctx, "/100", 907, 211, { size: 24, weight: "900", colour: text });
   drawWrappedText(ctx, `${data.seasons}-year career • ${data.topSummary} • ${data.draftLine}`, 105, 248, 620, 28, {
@@ -5148,29 +5174,30 @@ function createCareerShareCanvas() {
     colour: muted,
   });
 
-  drawPanel(ctx, 70, 330, 940, 145, "RATING BREAKDOWN");
+  drawPanel(ctx, 70, 330, 940, 170, "RATING BREAKDOWN");
   const breakdown = getCareerRatingBreakdownForDisplay();
   const rows = [
     ["Stats", breakdown.statsScore || 0, 30],
     ["Awards", breakdown.awardsScore || 0, 25],
     ["Winning", breakdown.teamScore || 0, 25],
     ["Longevity", breakdown.longevityScore || 0, 10],
+    ["Legacy", breakdown.legacyScore || 0, 10],
   ];
   rows.forEach((row, index) => {
     const [label, value, max] = row;
-    const x = 105 + index * 225;
-    drawText(ctx, label, x, 395, { size: 18, weight: "900", colour: muted });
-    roundRect(ctx, x, 414, 165, 12, 6, "rgba(255,255,255,.14)", "rgba(255,255,255,.14)", 0);
-    roundRect(ctx, x, 414, clamp((Number(value) / max) * 165, 0, 165), 12, 6, primary, primary, 0);
-    drawText(ctx, `${Number(value || 0).toFixed(0)}/${max}`, x + 178, 425, { size: 18, weight: "900", colour: text });
+    const x = 100 + index * 180;
+    drawText(ctx, label, x, 392, { size: 17, weight: "900", colour: muted });
+    roundRect(ctx, x, 414, 125, 12, 6, "rgba(255,255,255,.14)", "rgba(255,255,255,.14)", 0);
+    roundRect(ctx, x, 414, clamp((Number(value) / max) * 125, 0, 125), 12, 6, secondary, secondary, 0);
+    drawText(ctx, `${Number(value || 0).toFixed(0)}/${max}`, x, 455, { size: 18, weight: "900", colour: text });
   });
 
-  drawPanel(ctx, 70, 515, 940, 250, "ACHIEVEMENTS");
+  drawPanel(ctx, 70, 535, 940, 230, "ACHIEVEMENTS");
   data.awards.slice(0, 8).forEach((item, index) => {
     const col = index % 4;
     const row = Math.floor(index / 4);
     const x = 105 + col * 225;
-    const y = 585 + row * 78;
+    const y = 595 + row * 75;
     roundRect(ctx, x, y, 185, 58, 12, panel2, line, 1);
     drawText(ctx, item.icon, x + 34, y + 38, { size: 27, weight: "900", colour: text, align: "center" });
     drawText(ctx, item.label, x + 110, y + 36, { size: 19, weight: "900", colour: text, align: "center", maxWidth: 116 });
@@ -5181,12 +5208,12 @@ function createCareerShareCanvas() {
     ["PPG", data.ppg],
     ["RPG", data.rpg],
     ["APG", data.apg],
-    ["DEF", `+${Math.round(Number(breakdown.avgDefense || 0))}`],
+    ["DEF", getDefenseDisplayLabelFromImpact(breakdown.avgDefense || 0)],
   ];
   statItems.forEach((item, index) => {
     const x = 105 + index * 225;
     roundRect(ctx, x, 858, 185, 54, 10, panel2, line, 1);
-    drawText(ctx, String(item[1]), x + 92, 890, { size: 34, weight: "900", colour: text, align: "center" });
+    drawText(ctx, String(item[1]), x + 92, 890, { size: fitTextSize(ctx, String(item[1]), 160, 34, "900"), weight: "900", colour: text, align: "center" });
     drawText(ctx, item[0], x + 92, 912, { size: 15, weight: "900", colour: muted, align: "center" });
   });
 
@@ -5206,6 +5233,8 @@ function createCareerShareCanvas() {
 
   return canvas;
 }
+
+
 
 
 
